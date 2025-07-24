@@ -53,7 +53,6 @@ The **Supervisor Agent** serves as the central coordinator of the system and is 
 3. Coordinating workflows between agents  
 4. Integrating outputs and returning final results  
 
----
 
 ### 3.2 Emotion Agent
 
@@ -64,7 +63,6 @@ The **Emotion Agent** conducts emotional analysis based on **Plutchik's Wheel of
 3. Tracking emotional trends over time  
 4. Offering detailed emotional explanations  
 
----
 
 ### 3.3 Topic Agent
 
@@ -75,7 +73,6 @@ The **Topic Agent** specializes in theme and keyword extraction. It performs:
 3. Topic clustering and classification  
 4. Foundation building for word clouds or knowledge graphs  
 
----
 
 ### 3.4 Report Agent
 
@@ -86,7 +83,6 @@ The **Report Agent** synthesizes all analysis results and generates comprehensiv
 3. Providing insights and recommendations  
 4. Supporting various report formats  
 
----
 
 ## 4. Workflow Example
 
@@ -117,7 +113,6 @@ The **Report Agent** synthesizes all analysis results and generates comprehensiv
    - `report_agent` integrates all findings into a polished report  
    - `supervisor_agent` returns the final report to the user  
 
----
 
 ## 5. Technical Implementation Notes
 
