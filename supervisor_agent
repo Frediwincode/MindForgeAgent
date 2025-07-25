@@ -1,0 +1,352 @@
+{
+    "name": "supervisor_agent",
+    "description": "中央协调器，负责分析用户请求、规划执行流程、分配任务给专业Agent并监督整个工作流程的完成",
+    "input": {
+        "user_query": {
+            "type": "string",
+            "description": "用户的原始查询文本",
+            "required": true
+        },
+        "available_agents": [
+            {
+                "name": "summarize_agent",
+                "description": "分析日记内容并生成简洁摘要，捕捉核心情绪和主要事件",
+                "capabilities": ["summarization", "content_analysis"],
+                "input_schema": {
+                    "title": {
+                        "type": "string",
+                        "description": "日记标题，通常包含日期或主题关键词",
+                        "required": true
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "日记正文内容，包含用户的情感表达和事件记录",
+                        "required": true
+                    }
+                },
+                "output_schema": {
+                    "summary": {
+                        "type": "string",
+                        "description": "日记内容的简洁摘要"
+                    },
+                    "key_points": {
+                        "type": "array",
+                        "description": "关键点列表"
+                    },
+                    "emotion_keywords": {
+                        "type": "array",
+                        "description": "情绪关键词"
+                    }
+                }
+            },
+            {
+                "name": "report_agent",
+                "description": "生成综合数据分析报告，将原始数据转化为结构化、可读性强的报告文档，包含图表分析和改进建议",
+                "capabilities": ["report_generation", "data_visualization"],
+                "input_schema": {
+                    "report_type": {
+                        "type": "string",
+                        "description": "报告类型，如'情绪分析报告'、'习惯追踪报告'等",
+                        "required": true
+                    },
+                    "data_files": {
+                        "type": "array",
+                        "description": "需要分析的数据文件列表，包含情绪记录、日记内容等",
+                        "required": true
+                    }
+                },
+                "output_schema": {
+                    "report": {
+                        "type": "object",
+                        "description": "生成的报告",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "报告标题"
+                            },
+                            "sections": {
+                                "type": "array",
+                                "description": "报告各部分内容"
+                            },
+                            "visualizations": {
+                                "type": "array",
+                                "description": "数据可视化图表"
+                            },
+                            "recommendations": {
+                                "type": "array",
+                                "description": "建议列表"
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "name": "emotion_agent",
+                "description": "基于Plutchik情绪轮理论分析文本中表达的情绪，提供八种基本情绪维度的量化评分，帮助理解情感状态的复杂性和强度",
+                "capabilities": ["emotion_analysis", "sentiment_tracking"],
+                "input_schema": {
+                    "content": {
+                        "type": "string",
+                        "description": "需要分析情绪的日记正文或摘要内容",
+                        "required": true
+                    },
+                    "detailed_analysis": {
+                        "type": "boolean",
+                        "description": "是否提供详细的情绪分析解释",
+                        "required": false
+                    }
+                },
+                "output_schema": {
+                    "primary_emotion": {
+                        "type": "string",
+                        "description": "主要情绪"
+                    },
+                    "emotion_scores": {
+                        "type": "object",
+                        "description": "各种情绪的量化分数",
+                        "properties": {
+                            "joy": {"type": "number"},
+                            "sadness": {"type": "number"},
+                            "fear": {"type": "number"},
+                            "anger": {"type": "number"},
+                            "trust": {"type": "number"},
+                            "disgust": {"type": "number"},
+                            "anticipation": {"type": "number"},
+                            "surprise": {"type": "number"}
+                        }
+                    },
+                    "trend_analysis": {
+                        "type": "object",
+                        "description": "情绪趋势分析"
+                    },
+                    "detailed_report": {
+                        "type": "string",
+                        "description": "详细的情绪分析报告"
+                    }
+                }
+            },
+            {
+                "name": "topic_agent",
+                "description": "分析文档集合中的主题和关键词，提取重要概念并进行聚类，为词云生成和知识图谱构建提供基础数据",
+                "capabilities": ["topic_extraction", "keyword_analysis"],
+                "input_schema": {
+                    "documents": {
+                        "type": "array",
+                        "description": "需要分析的文档集合，可以是多篇日记内容或摘要",
+                        "required": true
+                    },
+                    "time_period": {
+                        "type": "string",
+                        "description": "分析的时间范围，如'last_week'、'june_2023'等",
+                        "required": false
+                    },
+                    "min_keywords": {
+                        "type": "number",
+                        "description": "需要提取的最少关键词数量",
+                        "required": false
+                    }
+                },
+                "output_schema": {
+                    "topics": {
+                        "type": "array",
+                        "description": "识别出的主题列表",
+                        "items": {
+                            "name": {"type": "string"},
+                            "keywords": {"type": "array"},
+                            "weight": {"type": "number"}
+                        }
+                    },
+                    "keywords": {
+                        "type": "array",
+                        "description": "关键词列表及其权重"
+                    },
+                    "topic_relationships": {
+                        "type": "array",
+                        "description": "主题之间的关系"
+                    }
+                }
+            }
+        ],
+        "context": {
+            "type": "object",
+            "description": "当前任务的上下文信息，包括用户历史、系统状态等",
+            "required": false
+        }
+    },
+    "output": {
+        "execution_plan": {
+            "type": "object",
+            "description": "完整的执行计划，包含工作流程和各Agent的调用顺序",
+            "properties": {
+                "workflow": {
+                    "type": "array",
+                    "description": "按执行顺序排列的步骤数组",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "step_id": {
+                                "type": "string",
+                                "description": "步骤的唯一标识符"
+                            },
+                            "agent": {
+                                "type": "string",
+                                "description": "执行此步骤的agent名称"
+                            },
+                            "input": {
+                                "type": "object",
+                                "description": "提供给agent的输入参数"
+                            },
+                            "middleware": {
+                                "type": "object",
+                                "description": "用于转换前一步骤输出到当前步骤输入的中间件配置",
+                                "properties": {
+                                    "input_mapping": {
+                                        "type": "object",
+                                        "description": "定义如何将前置步骤的输出字段映射到当前步骤的输入字段"
+                                    },
+                                    "transformations": {
+                                        "type": "array",
+                                        "description": "需要应用的数据转换操作列表",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "description": "转换类型，如format_change, filter, enrich等"
+                                                },
+                                                "source_field": {
+                                                    "type": "string",
+                                                    "description": "源数据字段"
+                                                },
+                                                "target_field": {
+                                                    "type": "string",
+                                                    "description": "目标数据字段"
+                                                },
+                                                "config": {
+                                                    "type": "object",
+                                                    "description": "转换的具体配置"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "abort": {
+                                "type": "boolean",
+                                "description": "当前一步骤输出异常时是否终止整个工作流，默认为false",
+                                "default": false
+                            }
+                        }
+                    }
+                },
+                "final_integration": {
+                    "type": "object",
+                    "description": "如何整合各步骤结果的说明"
+                }
+            }
+        },
+        "explanation": {
+            "type": "string",
+            "description": "对执行计划的解释，说明为何选择这些agent和此工作流程"
+        }
+    },
+    "example": {
+        "input": {
+            "user_query": "我需要写一篇关于冥想如何帮助减轻焦虑的情绪日记，并分析我最近一周的情绪状态。"
+        },
+        "output": {
+            "execution_plan": {
+                "workflow": [
+                    {
+                        "step_id": "step1",
+                        "agent": "topic_agent",
+                        "input": {
+                            "documents": ["请提供一篇关于冥想如何帮助减轻焦虑的文章素材"],
+                            "min_keywords": 10
+                        },
+                        "middleware": {
+                            "input_mapping": {},
+                            "transformations": []
+                        },
+                        "abort": false
+                    },
+                    {
+                        "step_id": "step2",
+                        "agent": "emotion_agent",
+                        "input": {
+                            "content": "用户提供的近一周日记内容",
+                            "detailed_analysis": true
+                        },
+                        "middleware": {
+                            "input_mapping": {},
+                            "transformations": []
+                        },
+                        "abort": true
+                    },
+                    {
+                        "step_id": "step3",
+                        "agent": "summarize_agent",
+                        "input": {
+                            "title": "冥想与焦虑 - {{current_date}}",
+                            "content": "{{user_generated_content}}"
+                        },
+                        "middleware": {
+                            "input_mapping": {
+                                "content_ideas": "step1.keywords"
+                            },
+                            "transformations": [
+                                {
+                                    "type": "content_enrichment",
+                                    "source_field": "keywords",
+                                    "target_field": "content_ideas",
+                                    "config": {
+                                        "format": "suggestion_list"
+                                    }
+                                }
+                            ]
+                        },
+                        "abort": false
+                    },
+                    {
+                        "step_id": "step4",
+                        "agent": "report_agent",
+                        "input": {
+                            "report_type": "情绪分析与冥想建议报告",
+                            "data_files": ["emotion_analysis.json", "journal_summary.json"]
+                        },
+                        "middleware": {
+                            "input_mapping": {
+                                "data_files": ["step2.output", "step3.output"]
+                            },
+                            "transformations": [
+                                {
+                                    "type": "file_generation",
+                                    "source_field": "step2",
+                                    "target_field": "emotion_analysis.json",
+                                    "config": {
+                                        "format": "json"
+                                    }
+                                },
+                                {
+                                    "type": "file_generation",
+                                    "source_field": "step3",
+                                    "target_field": "journal_summary.json",
+                                    "config": {
+                                        "format": "json"
+                                    }
+                                }
+                            ]
+                        },
+                        "abort": false
+                    }
+                ],
+                "final_integration": {
+                    "method": "sequential_presentation",
+                    "sections": ["journal_template", "emotion_analysis", "recommendations"]
+                }
+            },
+            "explanation": "基于用户需求，我设计了四步工作流：首先使用topic_agent提取有关冥想减轻焦虑的关键概念，同时用emotion_agent分析用户近一周的情绪数据，然后通过summarize_agent协助用户生成日记内容，最后由report_agent整合所有信息生成完整报告。每个步骤之间都配置了middleware以确保数据能顺利流转，且设置了适当的abort条件，在情绪分析出现异常时会终止流程并通知用户，避免基于错误数据继续执行后续步骤。"
+        }
+    }
+}
+```
