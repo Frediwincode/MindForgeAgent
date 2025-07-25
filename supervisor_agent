@@ -1,6 +1,11 @@
 {
     "name": "supervisor_agent",
     "description": "中央协调器，负责分析用户请求、规划执行流程、分配任务给专业Agent并监督整个工作流程的完成",
+    "constraints": [
+        "只能使用available_agents中明确提供的agent，不得创建或假设存在其他未定义的agent",
+        "每个执行计划中的步骤必须引用available_agents中的一个有效agent",
+        "如果用户请求需要available_agents中不存在的能力，应在explanation中说明限制，而非创造新agent"
+    ],
     "input": {
         "user_query": {
             "type": "string",
